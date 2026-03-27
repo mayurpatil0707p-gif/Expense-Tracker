@@ -1,0 +1,50 @@
+[
+  {
+    "id": "1774104538050",
+    "userId": "1774104472704",
+    "amount": 1000,
+    "category": "Food",
+    "description": "SMALL PARTY",
+    "date": "2026-03-20"
+  },
+  {
+    "id": "1774107160212",
+    "userId": "1774104472704",
+    "amount": 999,
+    "category": "Entertainment",
+    "description": "MOVIES",
+    "date": "2026-03-21"
+  },
+  {
+    "id": "1774107194447",
+    "userId": "1774104472704",
+    "amount": 3500,
+    "category": "Shopping",
+    "description": "CLOTHS",
+    "date": "2026-03-21T15:33:14.447Z"
+  },
+  {
+    "id": "1774107284625",
+    "userId": "1774104472704",
+    "amount": 5689,
+    "category": "Transport",
+    "description": "HOME SHIFTING",
+    "date": "2026-03-15"
+  },
+  {
+    "id": "1774107363646",
+    "userId": "1774104472704",
+    "amount": 750,
+    "category": "Shopping",
+    "description": "CLOTHES",
+    "date": "2026-03-18"
+  },
+  {
+    "id": "1774108334925",
+    "userId": "1774104472704",
+    "amount": 2700,
+    "category": "Other",
+    "description": "TRAVEL",
+    "date": "2026-03-17"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "1774104472704",
+    "name": "MAYUR PATIL",
+    "email": "xyz@gmail.com",
+    "password": "$2b$10$pKe2n6S6wcLTKuzDk6aM4OYEnzAT3aFt2VoeqGPspYQX4vAqNcXti"
+  },
+  {
+    "id": "1774160835096",
+    "name": "MAYUR PATIL",
+    "email": "mayurpatil999p@gmail.com",
+    "phone": "",
+    "password": "$2a$10$/VlCUzzDAKPt.YgVL0Odfeel9DhFsjpAFigttuiT05.XRQxGEoNH6",
+    "createdAt": "2026-03-22T06:27:15.096Z",
+    "resetToken": "2d1dfb5cbdb87311d47b7cfef17543d7ac79c221d831410a7e579a5f596d9807",
+    "resetTokenExpiry": 1774550030243,
+    "profilePic": "http://localhost:5000/uploads/1774501947561.jpg"
+  },
+  {
+    "id": "1774512028796",
+    "name": "Shubham",
+    "email": "subham8150@gmail.com",
+    "phone": "",
+    "password": "$2a$10$Oph2Bk7t/ZHHitZglrm6K.FGBwXEVQGPTo.xdbKTUS7qSBwTdwraC",
+    "createdAt": "2026-03-26T08:00:28.796Z",
+    "profilePic": "",
+    "resetToken": null,
+    "resetTokenExpiry": null
+  }
+]

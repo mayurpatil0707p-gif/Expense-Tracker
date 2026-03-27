@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1774455517529",
+    "userId": "1774160835096",
+    "amount": 5000,
+    "type": "expense",
+    "category": "Other Expense",
+    "description": "RENT",
+    "notes": "",
+    "period": "monthly",
+    "lastAdded": "2026-03-25T16:18:37.531Z",
+    "nextDue": "2026-04-24T16:18:37.531Z"
+  },
+  {
+    "id": "1774521569758",
+    "userId": "1774160835096",
+    "amount": 1000,
+    "type": "income",
+    "category": "Investment",
+    "description": "STOCKS",
+    "notes": "",
+    "period": "weekly",
+    "lastAdded": "2026-03-26T10:39:29.760Z",
+    "nextDue": "2026-04-02T10:39:29.761Z"
+  }
+]

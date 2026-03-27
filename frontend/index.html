@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFinance Pro | Track Income & Expenses</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Dark Mode Variables */
+        :root {
+            --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-primary: #333;
+            --text-secondary: #666;
+            --border-color: #e0e0e0;
+            --input-bg: white;
+        }
+
+        body.dark {
+            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --card-bg: rgba(30, 30, 46, 0.95);
+            --text-primary: #fff;
+            --text-secondary: #aaa;
+            --border-color: #333;
+            --input-bg: #2a2a3a;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Particle Background */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Auth Container */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-box {
+            background: var(--card-bg);
+            border-radius: 30px;
+            padding: 50px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .auth-box h2 {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 40px;
+            color: #667eea;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px 12px 12px 45px;
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .input-group textarea {
+            padding: 12px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 15px;
+            color: var(--text-secondary);
+        }
+
+        .auth-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .error-message,
+        .success-message {
+            padding: 12px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card-bg);
+            border-radius: 25px;
+            padding: 25px 35px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-area h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-area p {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+        }
+
+        .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid #667eea;
+        }
+
+        .profile-pic-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .welcome-text {
+            font-size: 18px;
+            color: var(--text-primary);
+        }
+
+        .quote {
+            font-size: 12px;
+            color: #667eea;
+            font-style: italic;
+            margin: 5px 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-primary);
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.1);
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            width: auto;
+            padding: 10px 25px;
+        }
+
+        /* Balance Card */
+        .balance-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 25px;
+            padding: 35px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .balance-amount {
+            font-size: 56px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .balance-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .balance-stats .value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .income-value { color: #a5d6a7; }
+        .expense-value { color: #ffccbc; }
+
+        /* Stats Cards */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-card i {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card .count {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: var(--text-primary);
+        }
+
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-card h3 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        canvas {
+            max-height: 300px;
+            transition: all 0.5s ease;
+        }
+
+        canvas:hover {
+            transform: scale(1.02);
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 14px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .filter-btn,
+        .email-btn {
+            width: auto;
+            padding: 10px 20px;
+        }
+
+        .email-btn {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+        }
+
+        /* Add Transaction */
+        .add-transaction {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .transaction-tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.income {
+            background: #e8f5e9;
+            color: #4caf50;
+            border: 2px solid #4caf50;
+        }
+
+        .tab-btn.income.active {
+            background: #4caf50;
+            color: white;
+        }
+
+        .tab-btn.expense {
+            background: #ffebee;
+            color: #ff6b6b;
+            border: 2px solid #ff6b6b;
+        }
+
+        .tab-btn.expense.active {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        /* Notes Section */
+        .notes-section {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .notes-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .notes-section textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            font-size: 14px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-group input {
+            width: auto;
+            padding: 0;
+        }
+
+        /* Transactions List */
+        .transactions-list {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .transaction-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateX(5px);
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-description {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        .transaction-category {
+            font-size: 11px;
+            margin-top: 6px;
+            color: var(--text-secondary);
+        }
+
+        .transaction-notes {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .transaction-date {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .transaction-amount {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0 20px;
+        }
+
+        .income-amount { color: #4caf50; }
+        .expense-amount { color: #ff6b6b; }
+
+        .transaction-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit-btn, .delete-btn, .recurring-btn {
+            padding: 8px 15px;
+            width: auto;
+            font-size: 12px;
+        }
+
+        .edit-btn { background: #ffc107; color: #333; }
+        .delete-btn { background: #dc3545; }
+        .recurring-btn { background: #17a2b8; }
+
+        .empty-message {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* Success Popup */
+        .success-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            z-index: 10001;
+            text-align: center;
+            animation: popupSlideIn 0.5s ease;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            min-width: 380px;
+        }
+
+        .success-popup i {
+            font-size: 70px;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .success-popup h3 { font-size: 26px; }
+        .success-popup .popup-email {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 30px;
+        }
+        .success-popup .popup-close {
+            background: rgba(255,255,255,0.25);
+            border: none;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        /* Forgot Password Popup */
+        .forgot-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #2196f3, #1976d2);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            z-index: 10002;
+            text-align: center;
+            animation: popupSlideIn 0.5s ease;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            min-width: 380px;
+        }
+
+        .forgot-popup i { font-size: 70px; }
+        .forgot-popup h3 { font-size: 26px; }
+        .forgot-popup .popup-email {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 30px;
+        }
+        .forgot-popup .popup-close {
+            background: rgba(255,255,255,0.25);
+            border: none;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        @keyframes popupSlideIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes popupSlideOut {
+            from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            to { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+        }
+
+        @media (max-width: 768px) {
+            .charts-section { grid-template-columns: 1fr; }
+            .transaction-item { flex-direction: column; text-align: center; }
+            .transaction-amount { margin: 10px 0; }
+            .balance-amount { font-size: 36px; }
+            .success-popup, .forgot-popup { min-width: 300px; padding: 20px 25px; }
+            .success-popup i, .forgot-popup i { font-size: 50px; }
+            .success-popup h3, .forgot-popup h3 { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Auth Section -->
+    <div id="authSection">
+        <div class="auth-container">
+            <div class="auth-box">
+                <h2 id="authTitle"><i class="fas fa-chart-line"></i> SmartFinance</h2>
+                <div class="auth-subtitle">Track Income & Expenses Smartly</div>
+                <div id="errorMessage" class="error-message"></div>
+                <div id="successMessage" class="success-message"></div>
+                <form id="authForm">
+                    <div id="nameField" style="display: none;">
+                        <div class="input-group">
+                            <label><i class="fas fa-user"></i> Full Name</label>
+                            <input type="text" id="name" placeholder="John Doe">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" id="email" placeholder="your@email.com" required>
+                    </div>
+                    <div id="phoneField" style="display: none;">
+                        <div class="input-group">
+                            <label><i class="fas fa-phone"></i> Phone (Optional)</label>
+                            <input type="tel" id="phone" placeholder="+91 1234567890">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn" id="submitBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
+                </form>
+                <div class="auth-link">
+                    <a href="#" id="forgotPasswordLink">Forgot Password?</a>
+                </div>
+                <div class="auth-link">
+                    <span id="toggleText">Don't have an account?</span>
+                    <a href="#" id="toggleLink">Create Account</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <div class="header">
+            <div class="logo-area">
+                <h1><i class="fas fa-coins"></i> SmartFinance Pro</h1>
+                <p>Track. Save. Grow.</p>
+            </div>
+            <div class="user-area">
+                <div class="controls">
+                    <button class="icon-btn" onclick="toggleDarkMode()" id="darkModeBtn"><i class="fas fa-moon"></i></button>
+                </div>
+                <div class="profile-section" onclick="openProfileModal()">
+                    <div id="profilePicContainer" class="profile-pic-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <div class="welcome-text"><i class="fas fa-smile-wink"></i> Welcome, <span id="userName"></span>!</div>
+                        <div class="quote" id="quote"></div>
+                    </div>
+                </div>
+                <input type="file" id="profilePicInput" style="display: none" accept="image/*">
+                <button class="btn logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+
+        <!-- Balance Card -->
+        <div class="balance-card">
+            <h3><i class="fas fa-wallet"></i> Total Balance</h3>
+            <div class="balance-amount" id="totalBalance"><span id="currencySymbol">₹</span>0</div>
+            <div class="balance-stats">
+                <div><div class="label">📈 Total Income</div><div class="value income-value" id="totalIncome"><span id="currencySymbolIncome">₹</span>0</div></div>
+                <div><div class="label">📉 Total Expense</div><div class="value expense-value" id="totalExpense"><span id="currencySymbolExpense">₹</span>0</div></div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats">
+            <div class="stat-card"><i class="fas fa-chart-line" style="color:#4caf50;"></i><h3>Income</h3><div class="count" id="incomeCount">0</div><small>Transactions</small></div>
+            <div class="stat-card"><i class="fas fa-chart-line" style="color:#ff6b6b;"></i><h3>Expense</h3><div class="count" id="expenseCount">0</div><small>Transactions</small></div>
+            <div class="stat-card"><i class="fas fa-exchange-alt"></i><h3>Total</h3><div class="count" id="totalCount">0</div><small>Transactions</small></div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-section">
+            <div class="chart-card"><h3><i class="fas fa-chart-pie"></i> Income vs Expense</h3><canvas id="incomeExpenseChart"></canvas></div>
+            <div class="chart-card"><h3><i class="fas fa-chart-line"></i> 30-Day Trend</h3><canvas id="trendChart"></canvas></div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group"><label><i class="fas fa-calendar"></i> Start Date</label><input type="date" id="startDate"></div>
+            <div class="filter-group"><label><i class="fas fa-calendar"></i> End Date</label><input type="date" id="endDate"></div>
+            <div class="filter-group"><label><i class="fas fa-tag"></i> Type</label><select id="filterType"><option value="">All</option><option value="income">Income</option><option value="expense">Expense</option></select></div>
+            <div class="filter-group"><label><i class="fas fa-money-bill"></i> Currency</label><select id="currencySelect" onchange="changeCurrency()"><option value="₹">INR (₹)</option><option value="$">USD ($)</option><option value="€">EUR (€)</option><option value="£">GBP (£)</option></select></div>
+            <button class="btn filter-btn" onclick="applyFilters()"><i class="fas fa-filter"></i> Apply</button>
+            <button class="btn email-btn" onclick="openEmailModal()"><i class="fas fa-envelope"></i> Email Report</button>
+        </div>
+
+        <!-- Add Transaction -->
+        <div class="add-transaction">
+            <div class="transaction-tabs">
+                <button class="tab-btn income active" onclick="setTransactionType('income')"><i class="fas fa-plus-circle"></i> Add Income</button>
+                <button class="tab-btn expense" onclick="setTransactionType('expense')"><i class="fas fa-minus-circle"></i> Add Expense</button>
+            </div>
+            <form id="transactionForm">
+                <input type="hidden" id="transactionType" value="income">
+                <div class="form-row">
+                    <div class="input-group"><label><i class="fas fa-rupee-sign"></i> Amount</label><input type="number" id="amount" step="0.01" required></div>
+                    <div class="input-group"><label><i class="fas fa-tag"></i> Category</label><select id="category" required><option value="" disabled selected>— Select Category —</option></select></div>
+                    <div class="input-group"><label><i class="fas fa-pen"></i> Description</label><input type="text" id="description" required></div>
+                    <div class="input-group"><label><i class="fas fa-calendar"></i> Date</label><input type="date" id="date"></div>
+                </div>
+                <div class="notes-section"><label><i class="fas fa-sticky-note"></i> Notes (Optional)</label><textarea id="notes" rows="3" placeholder="Add any additional notes..."></textarea></div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="isRecurring">
+                    <label for="isRecurring"><i class="fas fa-sync-alt"></i> Set as Recurring Transaction</label>
+                    <select id="recurringPeriod" style="display:none; width:auto; margin-left:10px; padding: 5px;">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly" selected>Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn"><i class="fas fa-save"></i> Add Transaction</button>
+            </form>
+        </div>
+
+        <!-- Transactions List -->
+        <div class="transactions-list">
+            <h3><i class="fas fa-list"></i> Recent Transactions</h3>
+            <div id="transactionsContainer">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="editModal" class="modal"><div class="modal-content"><h3>Edit Transaction</h3><form id="editForm"><input type="hidden" id="editId"><div class="input-group"><label>Amount</label><input type="number" id="editAmount" step="0.01" required></div><div class="input-group"><label>Type</label><select id="editType"><option value="income">Income</option><option value="expense">Expense</option></select></div><div class="input-group"><label>Category</label><input type="text" id="editCategory" required></div><div class="input-group"><label>Description</label><input type="text" id="editDescription" required></div><div class="input-group"><label>Notes</label><textarea id="editNotes" rows="3"></textarea></div><div class="input-group"><label>Date</label><input type="date" id="editDate"></div><button type="submit" class="btn">Update</button><button type="button" class="btn" onclick="closeModal()" style="background:#dc3545; margin-top:10px;">Cancel</button></form></div></div>
+    <div id="emailModal" class="modal"><div class="modal-content"><h3>Send Email Report</h3><div class="input-group"><label>Start Date (Optional)</label><input type="date" id="emailStartDate"></div><div class="input-group"><label>End Date (Optional)</label><input type="date" id="emailEndDate"></div><button class="btn" onclick="sendEmailReportWithDate()">Send Report</button><button class="btn" onclick="closeEmailModal()" style="background:#dc3545; margin-top:10px;">Cancel</button></div></div>
+    <div id="profileModal" class="modal"><div class="modal-content"><h3>Edit Profile</h3><div class="input-group"><label>Name</label><input type="text" id="editName"></div><div class="input-group"><label>Profile Picture</label><button type="button" class="btn" onclick="document.getElementById('profilePicInputModal').click()">Upload Picture</button><input type="file" id="profilePicInputModal" style="display:none" accept="image/*"></div><button class="btn" onclick="updateName()">Update Name</button><button class="btn" onclick="closeProfileModal()" style="background:#dc3545; margin-top:10px;">Cancel</button></div></div>
+    <div id="forgotPasswordModal" class="modal"><div class="modal-content"><h3>Forgot Password</h3><div class="input-group"><label>Email Address</label><input type="email" id="resetEmail" placeholder="Enter your email"></div><button class="btn" onclick="sendResetLink()">Send Reset Link</button><button class="btn" onclick="closeForgotModal()" style="background:#dc3545; margin-top:10px;">Cancel</button></div></div>
+    <div id="successPopup" class="success-popup"><i class="fas fa-check-circle"></i><h3>✨ Email Sent Successfully! ✨</h3><p>Your financial report has been sent to:</p><div class="popup-email" id="popupEmail"></div><button class="popup-close" onclick="closeSuccessPopup()">Great! 👍</button></div>
+    <div id="forgotPopup" class="forgot-popup"><i class="fas fa-envelope"></i><h3>📧 Reset Link Sent!</h3><p>Check your email for password reset link</p><div class="popup-email" id="forgotPopupEmail"></div><button class="popup-close" onclick="closeForgotPopup()">Got it! 👍</button></div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let authToken = localStorage.getItem('token');
+        let allTransactions = [];
+        let currentTransactionType = 'income';
+        let incomeExpenseChart, trendChart;
+        let currentCurrency = localStorage.getItem('currency') || '₹';
+        let darkMode = localStorage.getItem('darkMode') === 'true';
+
+        const incomeCategories = [
+            { value: "Salary", label: "💼 Salary / Job Income" }, { value: "Freelance", label: "💻 Freelance / Contract" },
+            { value: "Investment", label: "📈 Investment Returns" }, { value: "Business", label: "🏪 Business Income" },
+            { value: "Rental", label: "🏠 Rental Income" }, { value: "Gift", label: "🎁 Gift / Bonus" }, { value: "Other Income", label: "✨ Other Income" }
+        ];
+        const expenseCategories = [
+            { value: "Food", label: "🍔 Food & Dining" }, { value: "Transport", label: "🚗 Transport & Fuel" },
+            { value: "Shopping", label: "🛍️ Shopping" }, { value: "Entertainment", label: "🎬 Entertainment" },
+            { value: "Bills", label: "📄 Bills & Utilities" }, { value: "Healthcare", label: "🏥 Healthcare" },
+            { value: "Education", label: "📚 Education" }, { value: "Rent", label: "🏠 Rent / Mortgage" },
+            { value: "Travel", label: "✈️ Travel" }, { value: "Insurance", label: "🛡️ Insurance" },
+            { value: "Grocery", label: "🛒 Grocery" }, { value: "Other Expense", label: "📌 Other Expense" }
+        ];
+        const quotes = ["💰 Save money, save future!", "📊 Track your finances, control your destiny!", "💎 Wealth is about managing what you have!", "🚀 Your financial journey starts today!", "📈 Small savings = Big returns!"];
+
+        if (darkMode) document.body.classList.add('dark');
+        document.getElementById('currencySelect').value = currentCurrency;
+        updateCurrencySymbols();
+        if (authToken) loadDashboard();
+
+        function updateCategories() {
+            const catSelect = document.getElementById('category');
+            const cats = currentTransactionType === 'income' ? incomeCategories : expenseCategories;
+            catSelect.innerHTML = '<option value="" disabled selected>— Select Category —</option>';
+            cats.forEach(c => { let opt = document.createElement('option'); opt.value = c.value; opt.textContent = c.label; catSelect.appendChild(opt); });
+        }
+
+        function initParticles() {
+            const canvas = document.getElementById('particle-canvas'), ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let particles = [];
+            for (let i = 0; i < 100; i++) particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 3 + 1, speedX: (Math.random() - 0.5) * 0.5, speedY: (Math.random() - 0.5) * 0.5, opacity: Math.random() * 0.5 + 0.2 });
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let p of particles) { ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fillStyle = `rgba(255,255,255,${p.opacity})`; ctx.fill(); p.x += p.speedX; p.y += p.speedY; if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0; if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0; }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+        initParticles();
+
+        function toggleDarkMode() { darkMode = !darkMode; document.body.classList.toggle('dark', darkMode); localStorage.setItem('darkMode', darkMode); document.getElementById('darkModeBtn').innerHTML = darkMode ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>'; }
+        function changeCurrency() { currentCurrency = document.getElementById('currencySelect').value; localStorage.setItem('currency', currentCurrency); updateCurrencySymbols(); updateStats(allTransactions); displayTransactions(allTransactions); }
+        function updateCurrencySymbols() { ['currencySymbol', 'currencySymbolIncome', 'currencySymbolExpense'].forEach(id => document.getElementById(id).textContent = currentCurrency); }
+
+        document.getElementById('profilePicInput').addEventListener('change', async (e) => { let file = e.target.files[0]; if (!file) return; let fd = new FormData(); fd.append('profilePic', file); let res = await fetch(API_URL + '/profile/upload-pic', { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` }, body: fd }); if (res.ok) { let data = await res.json(); updateProfilePic(data.profilePic); showSuccess('Profile picture updated!'); } });
+        document.getElementById('profilePicInputModal').addEventListener('change', async (e) => { let file = e.target.files[0]; if (!file) return; let fd = new FormData(); fd.append('profilePic', file); let res = await fetch(API_URL + '/profile/upload-pic', { method: 'POST', headers: { 'Authorization': `Bearer ${authToken}` }, body: fd }); if (res.ok) { let data = await res.json(); updateProfilePic(data.profilePic); showSuccess('Profile picture updated!'); } });
+        function updateProfilePic(url) { document.getElementById('profilePicContainer').innerHTML = url ? `<img src="${url}" class="profile-pic">` : `<i class="fas fa-user"></i>`; }
+        function openProfileModal() { document.getElementById('editName').value = localStorage.getItem('userName'); document.getElementById('profileModal').style.display = 'flex'; }
+        async function updateName() { let newName = document.getElementById('editName').value; if (!newName) return showError('Enter name'); let res = await fetch(API_URL + '/profile/update-name', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` }, body: JSON.stringify({ name: newName }) }); if (res.ok) { localStorage.setItem('userName', newName); document.getElementById('userName').textContent = newName; closeProfileModal(); showSuccess('Name updated!'); } else showError('Update failed'); }
+        function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
+
+        document.getElementById('forgotPasswordLink').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('forgotPasswordModal').style.display = 'flex'; });
+        function closeForgotModal() { document.getElementById('forgotPasswordModal').style.display = 'none'; document.getElementById('resetEmail').value = ''; }
+        function showForgotPopup(email) { let popup = document.getElementById('forgotPopup'); document.getElementById('forgotPopupEmail').innerHTML = `<i class="fas fa-envelope"></i> ${email}`; popup.style.display = 'flex'; setTimeout(() => closeForgotPopup(), 5000); }
+        function closeForgotPopup() { let popup = document.getElementById('forgotPopup'); popup.style.animation = 'popupSlideOut 0.3s ease'; setTimeout(() => { popup.style.display = 'none'; popup.style.animation = ''; }, 300); }
+        async function sendResetLink() { let email = document.getElementById('resetEmail').value; if (!email) return showError('Enter email'); try { let res = await fetch(API_URL + '/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) }); let data = await res.json(); if (res.ok) { closeForgotModal(); showForgotPopup(email); } else showError(data.error); } catch (error) { showError('Error sending reset link'); } }
+
+        function showError(msg) { let div = document.getElementById('errorMessage'); div.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + msg; div.style.display = 'block'; setTimeout(() => div.style.display = 'none', 5000); }
+        function showSuccess(msg) { let div = document.getElementById('successMessage'); div.innerHTML = '<i class="fas fa-check-circle"></i> ' + msg; div.style.display = 'block'; setTimeout(() => div.style.display = 'none', 5000); }
+        function showSuccessPopup(email) { let popup = document.getElementById('successPopup'); document.getElementById('popupEmail').innerHTML = `<i class="fas fa-envelope"></i> ${email}`; popup.style.display = 'flex'; setTimeout(() => closeSuccessPopup(), 5000); }
+        function closeSuccessPopup() { let popup = document.getElementById('successPopup'); popup.style.animation = 'popupSlideOut 0.3s ease'; setTimeout(() => { popup.style.display = 'none'; popup.style.animation = ''; }, 300); }
+
+        function openEmailModal() { document.getElementById('emailModal').style.display = 'flex'; }
+        function closeEmailModal() { document.getElementById('emailModal').style.display = 'none'; document.getElementById('emailStartDate').value = ''; document.getElementById('emailEndDate').value = ''; }
+        async function sendEmailReportWithDate() {
+            let userEmail = localStorage.getItem('userEmail'), userName = localStorage.getItem('userName'), startDate = document.getElementById('emailStartDate').value, endDate = document.getElementById('emailEndDate').value;
+            if (!userEmail) return showError('No email found'); if (allTransactions.length === 0) return showError('No transactions');
+            let totalIncome = 0, totalExpense = 0, incomeCount = 0, expenseCount = 0;
+            let filtered = [...allTransactions];
+            if (startDate) filtered = filtered.filter(t => new Date(t.date) >= new Date(startDate));
+            if (endDate) filtered = filtered.filter(t => new Date(t.date) <= new Date(endDate));
+            filtered.forEach(t => { if (t.type === 'income') { totalIncome += t.amount; incomeCount++; } else { totalExpense += t.amount; expenseCount++; } });
+            let balance = totalIncome - totalExpense;
+            let res = await fetch(API_URL + '/send-report', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` }, body: JSON.stringify({ userEmail, userName, totalBalance: balance.toFixed(2), totalIncome: totalIncome.toFixed(2), totalExpense: totalExpense.toFixed(2), incomeCount, expenseCount, transactions: filtered, startDate, endDate, currencySymbol: currentCurrency }) });
+            if (res.ok) { closeEmailModal(); showSuccessPopup(userEmail); } else showError('Failed to send email');
+        }
+
+        let isLoginMode = true;
+        document.getElementById('toggleLink').addEventListener('click', (e) => {
+            e.preventDefault(); isLoginMode = !isLoginMode;
+            if (isLoginMode) { document.getElementById('authTitle').innerHTML = '<i class="fas fa-chart-line"></i> SmartFinance'; document.getElementById('submitBtn').innerHTML = '<i class="fas fa-sign-in-alt"></i> Login'; document.getElementById('toggleText').textContent = "Don't have an account?"; document.getElementById('toggleLink').textContent = 'Create Account'; document.getElementById('nameField').style.display = 'none'; document.getElementById('phoneField').style.display = 'none'; }
+            else { document.getElementById('authTitle').innerHTML = '<i class="fas fa-user-plus"></i> Create Account'; document.getElementById('submitBtn').innerHTML = '<i class="fas fa-user-plus"></i> Register'; document.getElementById('toggleText').textContent = "Already have an account?"; document.getElementById('toggleLink').textContent = 'Login'; document.getElementById('nameField').style.display = 'block'; document.getElementById('phoneField').style.display = 'block'; }
+        });
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); let email = document.getElementById('email').value, password = document.getElementById('password').value, body = { email, password };
+            if (!isLoginMode) { let name = document.getElementById('name').value, phone = document.getElementById('phone').value; if (!name) return showError('Enter name'); body = { name, email, password, phone: phone || '' }; }
+            let endpoint = isLoginMode ? '/auth/login' : '/auth/register';
+            let res = await fetch(API_URL + endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            let data = await res.json();
+            if (res.ok) { localStorage.setItem('token', data.token); localStorage.setItem('userName', data.user.name); localStorage.setItem('userEmail', data.user.email); if (data.user.profilePic) updateProfilePic(data.user.profilePic); authToken = data.token; loadDashboard(); } else showError(data.error);
+        });
+
+        function setTransactionType(type) { currentTransactionType = type; document.getElementById('transactionType').value = type; let inc = document.querySelector('.tab-btn.income'), exp = document.querySelector('.tab-btn.expense'); if (type === 'income') { inc.classList.add('active'); exp.classList.remove('active'); } else { exp.classList.add('active'); inc.classList.remove('active'); } updateCategories(); }
+        async function loadDashboard() { document.getElementById('authSection').style.display = 'none'; document.getElementById('dashboard').style.display = 'block'; document.getElementById('userName').textContent = localStorage.getItem('userName'); document.getElementById('quote').innerHTML = `<i class="fas fa-quote-left"></i> ${quotes[Math.floor(Math.random() * quotes.length)]}`; updateCategories(); await loadTransactions(); }
+        async function loadTransactions() { let res = await fetch(API_URL + '/transactions', { headers: { 'Authorization': `Bearer ${authToken}` } }); allTransactions = await res.json(); displayTransactions(allTransactions); updateStats(allTransactions); updateCharts(allTransactions); }
+        document.getElementById('isRecurring').addEventListener('change', (e) => { document.getElementById('recurringPeriod').style.display = e.target.checked ? 'inline-block' : 'none'; });
+        document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); let t = { amount: parseFloat(document.getElementById('amount').value), type: document.getElementById('transactionType').value, category: document.getElementById('category').value, description: document.getElementById('description').value, date: document.getElementById('date').value || new Date().toISOString().split('T')[0], notes: document.getElementById('notes').value, isRecurring: document.getElementById('isRecurring').checked, recurringPeriod: document.getElementById('isRecurring').checked ? document.getElementById('recurringPeriod').value : null };
+            if (!t.amount || !t.category || !t.description) return showError('Fill all fields');
+            let res = await fetch(API_URL + '/transactions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` }, body: JSON.stringify(t) });
+            if (res.ok) { document.getElementById('transactionForm').reset(); document.getElementById('notes').value = ''; setTransactionType('income'); document.getElementById('isRecurring').checked = false; document.getElementById('recurringPeriod').style.display = 'none'; await loadTransactions(); showSuccess('Transaction added!'); }
+        });
+        function displayTransactions(transactions) {
+            let container = document.getElementById('transactionsContainer');
+            if (transactions.length === 0) { container.innerHTML = '<div class="empty-message">No transactions yet.</div>'; return; }
+            container.innerHTML = transactions.map(t => `<div class="transaction-item"><div class="transaction-info"><div class="transaction-description">${escapeHtml(t.description)}</div><div class="transaction-category"><i class="fas fa-tag"></i> ${escapeHtml(t.category)}</div>${t.notes ? `<div class="transaction-notes"><i class="fas fa-sticky-note"></i> ${escapeHtml(t.notes)}</div>` : ''}<div class="transaction-date"><i class="fas fa-calendar"></i> ${new Date(t.date).toLocaleDateString()}</div></div><div class="transaction-amount ${t.type === 'income' ? 'income-amount' : 'expense-amount'}">${t.type === 'income' ? '+' : '-'}${currentCurrency}${t.amount}</div><div class="transaction-actions">${t.isRecurring ? `<button class="btn recurring-btn" onclick="cancelRecurring('${t.id}')">Cancel Recurring</button>` : ''}<button class="btn edit-btn" onclick="openEditModal('${t.id}')">Edit</button><button class="btn delete-btn" onclick="deleteTransaction('${t.id}')">Delete</button></div></div>`).join('');
+        }
+        function escapeHtml(text) { if (!text) return ''; let div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        async function cancelRecurring(id) { if (confirm('Cancel this recurring transaction?')) { await fetch(API_URL + '/recurring/' + id, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` } }); await loadTransactions(); showSuccess('Recurring cancelled!'); } }
+        function updateStats(transactions) { let totalIncome = 0, totalExpense = 0, inc = 0, exp = 0; transactions.forEach(t => { if (t.type === 'income') { totalIncome += t.amount; inc++; } else { totalExpense += t.amount; exp++; } }); let bal = totalIncome - totalExpense; document.getElementById('totalBalance').innerHTML = `${currentCurrency}${bal.toFixed(2)}`; document.getElementById('totalIncome').innerHTML = `${currentCurrency}${totalIncome.toFixed(2)}`; document.getElementById('totalExpense').innerHTML = `${currentCurrency}${totalExpense.toFixed(2)}`; document.getElementById('incomeCount').textContent = inc; document.getElementById('expenseCount').textContent = exp; document.getElementById('totalCount').textContent = transactions.length; }
+        function updateCharts(transactions) { let totalIncome = 0, totalExpense = 0; transactions.forEach(t => { if (t.type === 'income') totalIncome += t.amount; else totalExpense += t.amount; }); let ctx1 = document.getElementById('incomeExpenseChart').getContext('2d'); if (incomeExpenseChart) incomeExpenseChart.destroy(); incomeExpenseChart = new Chart(ctx1, { type: 'doughnut', data: { labels: ['Income', 'Expense'], datasets: [{ data: [totalIncome, totalExpense], backgroundColor: ['#4caf50', '#ff6b6b'] }] } }); let last30 = []; for (let i = 29; i >= 0; i--) { let d = new Date(); d.setDate(d.getDate() - i); last30.push(d.toLocaleDateString()); } let dailyInc = last30.map(date => transactions.filter(t => t.type === 'income' && new Date(t.date).toLocaleDateString() === date).reduce((s, t) => s + t.amount, 0)); let dailyExp = last30.map(date => transactions.filter(t => t.type === 'expense' && new Date(t.date).toLocaleDateString() === date).reduce((s, t) => s + t.amount, 0)); let ctx2 = document.getElementById('trendChart').getContext('2d'); if (trendChart) trendChart.destroy(); trendChart = new Chart(ctx2, { type: 'line', data: { labels: last30.map((_, i) => i % 5 === 0 ? _ : ''), datasets: [{ label: 'Income', data: dailyInc, borderColor: '#4caf50', fill: true }, { label: 'Expense', data: dailyExp, borderColor: '#ff6b6b', fill: true }] } }); }
+        function applyFilters() { let start = document.getElementById('startDate').value, end = document.getElementById('endDate').value, type = document.getElementById('filterType').value; let filtered = [...allTransactions]; if (start) filtered = filtered.filter(t => new Date(t.date) >= new Date(start)); if (end) filtered = filtered.filter(t => new Date(t.date) <= new Date(end)); if (type) filtered = filtered.filter(t => t.type === type); displayTransactions(filtered); updateStats(filtered); updateCharts(filtered); }
+        async function deleteTransaction(id) { if (confirm('Delete this transaction?')) { await fetch(API_URL + '/transactions/' + id, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` } }); await loadTransactions(); showSuccess('Deleted!'); } }
+        async function openEditModal(id) { let t = allTransactions.find(t => t.id === id); if (t) { document.getElementById('editId').value = t.id; document.getElementById('editAmount').value = t.amount; document.getElementById('editType').value = t.type; document.getElementById('editCategory').value = t.category; document.getElementById('editDescription').value = t.description; document.getElementById('editNotes').value = t.notes || ''; document.getElementById('editDate').value = t.date.split('T')[0]; document.getElementById('editModal').style.display = 'flex'; } }
+        document.getElementById('editForm').addEventListener('submit', async (e) => { e.preventDefault(); let id = document.getElementById('editId').value, updated = { amount: parseFloat(document.getElementById('editAmount').value), type: document.getElementById('editType').value, category: document.getElementById('editCategory').value, description: document.getElementById('editDescription').value, notes: document.getElementById('editNotes').value, date: document.getElementById('editDate').value }; await fetch(API_URL + '/transactions/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` }, body: JSON.stringify(updated) }); closeModal(); await loadTransactions(); showSuccess('Updated!'); });
+        function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+        function logout() { localStorage.clear(); authToken = null; document.getElementById('authSection').style.display = 'block'; document.getElementById('dashboard').style.display = 'none'; document.getElementById('authForm').reset(); isLoginMode = true; document.getElementById('nameField').style.display = 'none'; document.getElementById('phoneField').style.display = 'none'; }
+        window.onclick = function(event) { ['editModal', 'emailModal', 'profileModal', 'forgotPasswordModal'].forEach(id => { let modal = document.getElementById(id); if (event.target === modal) modal.style.display = 'none'; }); }
+    </script>
+</body>
+</html>
